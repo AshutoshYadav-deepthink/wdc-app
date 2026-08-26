@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WDC — Student Dashboard</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favicon-180.png">
+  <link rel="shortcut icon" href="/static/img/favicon.ico">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="dash-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="/" class="brand">
+        <img src="/static/img/logo-small.png" alt="WDC Logo" class="logo-img">
+        <span>WDC Student</span>
+      </a>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="events" onclick="switchTab('events')">
+          <span class="nav-icon">📅</span> Available Events
+        </button>
+        <button class="nav-item" data-tab="myreg" onclick="switchTab('myreg')">
+          <span class="nav-icon">✓</span> My Registrations
+        </button>
+        <button class="nav-item" data-tab="attendance" onclick="switchTab('attendance')">
+          <span class="nav-icon">📊</span> My Attendance
+        </button>
+        <button class="nav-item" data-tab="notifications" onclick="switchTab('notifications')">
+          <span class="nav-icon">🔔</span> Notifications
+        </button>
+        <button class="nav-item" onclick="window.location.href='/'">
+          <span class="nav-icon">🏠</span> Public Dashboard
+        </button>
+      </nav>
+      <div class="sidebar-user">
+        <div class="avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-role">Student</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="doLogout()" title="Logout">⏻</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="dash-main">
+      <div class="dash-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+          <div>
+            <h1 id="page-title">Available Events</h1>
+            <p id="page-sub">Register for upcoming WDC sessions.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome hero -->
+      <div class="hero-mini">
+        <h2 id="welcome-title">Welcome back!</h2>
+        <p id="welcome-sub">Track your registrations, attendance, and notifications.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-3" style="margin-bottom: 24px;">
+        <div class="stat-card">
+          <div class="stat-icon icon-purple">📅</div>
+          <div>
+            <div class="stat-value" id="stat-reg">—</div>
+            <div class="stat-label">My Registrations</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-mint">✓</div>
+          <div>
+            <div class="stat-value" id="stat-att">—</div>
+            <div class="stat-label">Sessions Attended</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-pink">🔔</div>
+          <div>
+            <div class="stat-value" id="stat-notif">—</div>
+            <div class="stat-label">Unread Notifications</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Available Events -->
+      <div id="tab-events">
+        <div class="grid grid-auto" id="events-grid"></div>
+      </div>
+
+      <!-- Tab: My Registrations -->
+      <div id="tab-myreg" style="display:none;">
+        <div class="table-wrap">
+          <table class="table" id="myreg-table">
+            <thead>
+              <tr><th>Event</th><th>Date</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Attendance -->
+      <div id="tab-attendance" style="display:none;">
+        <div class="table-wrap">
+          <table class="table" id="att-table">
+            <thead>
+              <tr><th>Event</th><th>Date</th><th>Status</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Notifications -->
+      <div id="tab-notifications" style="display:none;">
+        <div class="table-wrap" id="notif-list" style="padding:0;"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    let me = null;
+    let myRegs = [];
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.sidebar-nav .nav-item').forEach(x => x.classList.remove('active'));
+      const btn = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+      if (btn) btn.classList.add('active');
+      document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+      document.getElementById('tab-' + tab).style.display = 'block';
+      const titles = {
+        events: ['Available Events', 'Register for upcoming WDC sessions.'],
+        myreg: ['My Registrations', 'Events you\'ve signed up for.'],
+        attendance: ['My Attendance', 'Record of your participation.'],
+        notifications: ['Notifications', 'Updates from the WDC team.'],
+      };
+      document.getElementById('page-title').textContent = titles[tab][0];
+      document.getElementById('page-sub').textContent = titles[tab][1];
+      document.getElementById('sidebar').classList.remove('open');
+    }
+
+    async function init() {
+      me = await requireStudent();
+      if (!me) return;
+      document.getElementById('user-name').textContent = me.name || me.email;
+      document.getElementById('user-avatar').textContent = initials(me.name);
+      document.getElementById('welcome-title').textContent = `Welcome, ${me.name || 'Student'}!`;
+      document.getElementById('welcome-sub').textContent = `${me.department || ''} · ${me.class_year || ''}`;
+      await Promise.all([loadEvents(), loadMyRegs(), loadAttendance(), loadNotifs()]);
+    }
+
+    async function loadEvents() {
+      try {
+        const events = await API.listEvents();
+        myRegs = await API.myEvents();
+        document.getElementById('stat-reg').textContent = myRegs.length;
+        const grid = document.getElementById('events-grid');
+        if (!events.length) {
+          grid.innerHTML = '<div class="empty-state"><div class="empty-icon">○</div><p>No upcoming events.</p></div>';
+          return;
+        }
+        const regIds = new Set(myRegs.filter(r => r.status === 'registered' || r.status === 'waitlisted').map(r => r.event_id));
+        grid.innerHTML = events.map(e => {
+          const isReg = regIds.has(e.id);
+          return `
+            <div class="event-card">
+              <div class="event-cover"><span class="date-chip">${fmtDate(e.date)}</span></div>
+              <div class="event-body">
+                <div class="event-title">${escapeHtml(e.title)}</div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">${escapeHtml(e.short_description || '')}</p>
+                <div style="margin-bottom:12px;">
+                  ${(e.topics || []).slice(0,3).map(t => `<span class="badge badge-primary" style="margin-right:4px;margin-bottom:4px;">${escapeHtml(t)}</span>`).join('')}
+                </div>
+                <div class="event-meta">
+                  <span>📍 ${escapeHtml(e.venue || 'TBD')}</span>
+                  <span>👥 ${e.registered_count}/${e.capacity || '∞'}</span>
+                </div>
+                ${isReg
+                  ? `<button class="btn btn-soft btn-block btn-sm" style="margin-top:14px;" disabled>✓ Registered</button>`
+                  : `<button class="btn btn-primary btn-block btn-sm" style="margin-top:14px;" onclick="registerEvent('${e.id}')">Register Now</button>`
+                }
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) { toast('Failed to load events: ' + err.message, 'error'); }
+    }
+
+    async function registerEvent(id) {
+      try {
+        await API.register(id);
+        toast('Registered successfully!', 'success');
+        await loadEvents();
+        await loadMyRegs();
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function loadMyRegs() {
+      try {
+        myRegs = await API.myEvents();
+        document.getElementById('stat-reg').textContent = myRegs.length;
+        const tbody = document.querySelector('#myreg-table tbody');
+        if (!myRegs.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-muted);">No registrations yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = myRegs.map(r => `
+          <tr>
+            <td><strong>${escapeHtml(r.event_title)}</strong></td>
+            <td>${fmtDate(r.event_date)}</td>
+            <td><span class="badge ${badgeForStatus(r.status)}">${r.status}</span></td>
+            <td>${r.status === 'registered' ? `<button class="btn btn-soft btn-sm" onclick="cancelReg('${r.event_id}')">Cancel</button>` : '—'}</td>
+          </tr>
+        `).join('');
+      } catch (err) { toast('Failed to load registrations: ' + err.message, 'error'); }
+    }
+
+    async function cancelReg(eventId) {
+      if (!confirm('Cancel your registration for this event?')) return;
+      try {
+        await API.cancelReg(eventId);
+        toast('Registration cancelled', 'success');
+        await loadMyRegs();
+        await loadEvents();
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function loadAttendance() {
+      try {
+        const att = await API.myAttendance();
+        const present = att.filter(a => a.status === 'present').length;
+        document.getElementById('stat-att').textContent = present;
+        const tbody = document.querySelector('#att-table tbody');
+        if (!att.length) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:32px;color:var(--text-muted);">No attendance records yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = att.map(a => `
+          <tr>
+            <td><strong>${escapeHtml(a.event_title)}</strong></td>
+            <td>${fmtDate(a.event_date)}</td>
+            <td><span class="badge ${badgeForStatus(a.status)}">${a.status}</span></td>
+          </tr>
+        `).join('');
+      } catch (err) { toast('Failed to load attendance: ' + err.message, 'error'); }
+    }
+
+    async function loadNotifs() {
+      try {
+        const notifs = await API.myNotifications();
+        const unread = notifs.filter(n => !n.read).length;
+        document.getElementById('stat-notif').textContent = unread;
+        const list = document.getElementById('notif-list');
+        if (!notifs.length) {
+          list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔔</div><p>No notifications.</p></div>';
+          return;
+        }
+        list.innerHTML = notifs.map(n => `
+          <div class="notif-item ${n.read ? '' : 'unread'}">
+            <div class="notif-icon">🔔</div>
+            <div style="flex:1;">
+              <div class="notif-title">${escapeHtml(n.title)}</div>
+              <div class="notif-body">${escapeHtml(n.body)}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${fmtDateTime(n.created_at)}</div>
+            </div>
+            ${n.read ? '' : `<button class="btn btn-soft btn-sm" onclick="markRead('${n.id}')">Mark read</button>`}
+          </div>
+        `).join('');
+      } catch (err) { toast('Failed to load notifications: ' + err.message, 'error'); }
+    }
+
+    async function markRead(id) {
+      try { await API.markNotifRead(id); await loadNotifs(); }
+      catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function doLogout() {
+      try { await API.logout(); } catch {}
+      API.clearToken();
+      window.location.href = '/login';
+    }
+
+    function badgeForStatus(s) {
+      return {
+        registered: 'badge-primary', waitlisted: 'badge-warning', cancelled: 'badge-muted',
+        present: 'badge-success', absent: 'badge-danger', late: 'badge-warning',
+      }[s] || 'badge-muted';
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    init();
+  </script>
+</body>
+</html>

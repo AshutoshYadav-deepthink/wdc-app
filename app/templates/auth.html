@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WDC — Login / Sign Up</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favicon-180.png">
+  <link rel="shortcut icon" href="/static/img/favicon.ico">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="auth-shell">
+    <!-- Left hero -->
+    <div class="auth-hero">
+      <a href="/" class="brand">
+        <img src="/static/img/logo-small.png" alt="WDC Logo" class="logo-img">
+        <span>Women Development Cell</span>
+      </a>
+      <h1>Join the WDC Community</h1>
+      <p>Sign up to register for workshops, track your attendance, and stay updated on women empowerment initiatives on campus.</p>
+      <div class="features">
+        <div><span>✓</span> Register for events in one click</div>
+        <div><span>✓</span> Get notifications about new sessions</div>
+        <div><span>✓</span> Track your participation history</div>
+        <div><span>✓</span> Accessible across all your devices</div>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="auth-panel">
+      <div class="auth-card">
+        <h2>Welcome</h2>
+        <p>Student Login or Sign Up · Admins use the Admin tab</p>
+
+        <div class="auth-tabs">
+          <button id="tab-student" class="active" onclick="switchTab('student')">Student</button>
+          <button id="tab-admin" onclick="switchTab('admin')">Admin / Staff</button>
+        </div>
+
+        <!-- Student login -->
+        <div id="student-login">
+          <div class="auth-tabs" style="background: var(--bg); background-image: var(--bg-grad);">
+            <button id="login-tab" class="active" onclick="switchStudent('login')">Login</button>
+            <button id="signup-tab" onclick="switchStudent('signup')">Sign Up</button>
+          </div>
+
+          <form id="login-form" onsubmit="doLogin(event)">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" id="login-email" class="form-control" placeholder="student01@wdc.edu" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg">Login</button>
+          </form>
+
+          <form id="signup-form" onsubmit="doSignup(event)" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="su-name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" id="su-email" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="su-password" class="form-control" minlength="6" required>
+              <div class="form-hint">Minimum 6 characters.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <select id="su-dept" class="form-control" required>
+                <option value="">Select department</option>
+                <option value="BSc IT">BSc IT</option>
+                <option value="BMS">BMS</option>
+                <option value="BAF">BAF</option>
+                <option value="BCom">BCom</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Class</label>
+              <select id="su-class" class="form-control" required>
+                <option value="">Select class</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-accent btn-block btn-lg">Create Account</button>
+          </form>
+        </div>
+
+        <!-- Admin login -->
+        <div id="admin-login" style="display:none;">
+          <form onsubmit="doAdminLogin(event)">
+            <div class="form-group">
+              <label class="form-label">Admin Email</label>
+              <input type="email" id="admin-email" class="form-control" placeholder="admin@wdc.edu" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="admin-password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg">Admin Login</button>
+          </form>
+          <!--<div style="margin-top: 20px; padding: 16px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--neu-pressed-sm); font-size: 12px; color: var(--text);">
+            <strong style="color: var(--primary-dark);">Demo credentials:</strong><br>
+            Super Admin: admin@wdc.edu / Admin@123<br>
+            Coordinator: coordinator@wdc.edu / Coordinator@123
+          </div>-->
+        </div>
+
+        <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-muted);">
+          <a href="/">← Back to WDC dashboard</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    const CLASS_OPTIONS = {
+      'BSc IT': ['FYBSc IT', 'SYBSc IT', 'TYBSc IT'],
+      'BMS': ['FYBMS', 'SYBMS', 'TYBMS'],
+      'BAF': ['FYBAF', 'SYBAF', 'TYBAF'],
+      'BCom': ['FYBCom', 'SYBCom', 'TYBCom'],
+    };
+
+    document.getElementById('su-dept').addEventListener('change', (e) => {
+      const sel = document.getElementById('su-class');
+      const opts = CLASS_OPTIONS[e.target.value] || [];
+      sel.innerHTML = '<option value="">Select class</option>' + opts.map(c => `<option>${c}</option>`).join('');
+    });
+
+    function switchTab(tab) {
+      document.getElementById('tab-student').classList.toggle('active', tab === 'student');
+      document.getElementById('tab-admin').classList.toggle('active', tab === 'admin');
+      document.getElementById('student-login').style.display = tab === 'student' ? 'block' : 'none';
+      document.getElementById('admin-login').style.display = tab === 'admin' ? 'block' : 'none';
+    }
+
+    function switchStudent(mode) {
+      document.getElementById('login-tab').classList.toggle('active', mode === 'login');
+      document.getElementById('signup-tab').classList.toggle('active', mode === 'signup');
+      document.getElementById('login-form').style.display = mode === 'login' ? 'block' : 'none';
+      document.getElementById('signup-form').style.display = mode === 'signup' ? 'block' : 'none';
+    }
+
+    async function doLogin(e) {
+      e.preventDefault();
+      try {
+        const r = await API.studentLogin({
+          email: document.getElementById('login-email').value,
+          password: document.getElementById('login-password').value,
+        });
+        API.setToken(r.access_token, { role: r.role, name: r.name });
+        toast('Login successful', 'success');
+        setTimeout(() => window.location.href = '/student', 600);
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function doSignup(e) {
+      e.preventDefault();
+      try {
+        const r = await API.signup({
+          full_name: document.getElementById('su-name').value,
+          email: document.getElementById('su-email').value,
+          password: document.getElementById('su-password').value,
+          department: document.getElementById('su-dept').value,
+          class_year: document.getElementById('su-class').value,
+        });
+        API.setToken(r.access_token, { role: r.role, name: r.name });
+        toast('Account created — welcome!', 'success');
+        setTimeout(() => window.location.href = '/student', 600);
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function doAdminLogin(e) {
+      e.preventDefault();
+      try {
+        const r = await API.adminLogin({
+          email: document.getElementById('admin-email').value,
+          password: document.getElementById('admin-password').value,
+        });
+        API.setToken(r.access_token, { role: r.role, name: r.name });
+        toast('Admin login successful', 'success');
+        setTimeout(() => window.location.href = '/admin', 600);
+      } catch (err) { toast(err.message, 'error'); }
+    }
+  </script>
+</body>
+</html>

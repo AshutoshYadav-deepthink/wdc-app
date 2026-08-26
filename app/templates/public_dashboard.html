@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WDC — Women Development Cell</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favicon-180.png">
+  <link rel="shortcut icon" href="/static/img/favicon.ico">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="container">
+        <a href="/" class="brand">
+          <img src="/static/img/logo-small.png" alt="WDC Logo" class="logo-img">
+          <span>Women Development Cell</span>
+        </a>
+        <div class="nav-links">
+          <a href="#events">Events</a>
+          <a href="#dates">Dates</a>
+          <a href="#about">About</a>
+          <a href="/login" class="btn btn-soft btn-sm">Student Login</a>
+          <a href="/login" class="btn btn-primary btn-sm">Admin</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container" style="padding-top: 32px; padding-bottom: 48px;">
+      <!-- Hero -->
+      <section class="hero">
+        <div class="hero-deco"></div>
+        <div class="hero-deco-2"></div>
+        <h1>Empowering Women,<br>Building Futures</h1>
+        <p>The Women Development Cell is committed to creating a safe, inclusive, and empowering environment for all women students. Explore our workshops, seminars, and awareness drives.</p>
+        <div class="hero-actions">
+          <a href="#events" class="btn btn-primary btn-lg">View Upcoming Events</a>
+          <a href="/login" class="btn btn-soft btn-lg">Student Sign Up</a>
+        </div>
+      </section>
+
+      <!-- Quick stats -->
+      <section class="grid grid-4" style="margin-bottom: 8px;">
+        <div class="stat-card">
+          <div class="stat-icon icon-purple">●</div>
+          <div>
+            <div class="stat-value" id="stat-events">—</div>
+            <div class="stat-label">Upcoming Events</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-pink">★</div>
+          <div>
+            <div class="stat-value" id="stat-speakers">—</div>
+            <div class="stat-label">Expert Speakers</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-yellow">♥</div>
+          <div>
+            <div class="stat-value" id="stat-dates">—</div>
+            <div class="stat-label">Women's Observances</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-mint">✓</div>
+          <div>
+            <div class="stat-value" id="stat-students">—</div>
+            <div class="stat-label">Registered Students</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Events -->
+      <section id="events">
+        <div class="section-heading">
+          <div>
+            <h2>Upcoming Events</h2>
+            <p>Workshops, seminars, and awareness drives organized by the WDC.</p>
+          </div>
+          <a href="/login" class="btn btn-soft">Login to Register →</a>
+        </div>
+        <div class="grid grid-auto" id="events-grid">
+          <div class="empty-state">
+            <div class="empty-icon">○</div>
+            <p>Loading events...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Important dates -->
+      <section id="dates" style="margin-top: 48px;">
+        <div class="section-heading">
+          <div>
+            <h2>Important Women's Dates</h2>
+            <p>Annual observances the WDC commemorates through events and campaigns.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div id="dates-list"></div>
+        </div>
+      </section>
+
+      <!-- About -->
+      <section id="about" style="margin-top: 48px;">
+        <div class="section-heading">
+          <div>
+            <h2>About the Women Development Cell</h2>
+            <p>Mission, mandate, and how we serve the student community.</p>
+          </div>
+        </div>
+        <div class="grid grid-3">
+          <div class="card card-hover">
+            <div class="stat-icon icon-purple mb-4">✚</div>
+            <div class="card-title">Health &amp; Wellness</div>
+            <p class="card-subtitle">Workshops on menstrual hygiene, nutrition, mental health, and preventive screenings to keep every student healthy and informed.</p>
+          </div>
+          <div class="card card-hover">
+            <div class="stat-icon icon-pink mb-4">⚖</div>
+            <div class="card-title">Safety &amp; Legal Rights</div>
+            <p class="card-subtitle">Sessions on legal protections, POSH Act, cyber safety, and self-defense — empowering women to recognize and assert their rights.</p>
+          </div>
+          <div class="card card-hover">
+            <div class="stat-icon icon-yellow mb-4">★</div>
+            <div class="card-title">Skill &amp; Career</div>
+            <p class="card-subtitle">Resume workshops, entrepreneurship panels, and mentorship programs to bridge the gender gap in the workplace.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      © <span id="year"></span> Women Development Cell · College Demo · Built with Python · FastAPI · Firebase
+    </footer>
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    async function loadDashboard() {
+      try {
+        const [events, dates] = await Promise.all([API.listEvents(), API.listWomenDates()]);
+
+        document.getElementById('stat-events').textContent = events.length;
+        document.getElementById('stat-dates').textContent = dates.length;
+        document.getElementById('stat-speakers').textContent = '8';
+        document.getElementById('stat-students').textContent = '55+';
+
+        const grid = document.getElementById('events-grid');
+        if (!events.length) {
+          grid.innerHTML = '<div class="empty-state"><div class="empty-icon">○</div><p>No upcoming events right now.</p></div>';
+        } else {
+          grid.innerHTML = events.map(e => `
+            <div class="event-card">
+              <div class="event-cover"><span class="date-chip">${fmtDate(e.date)}</span></div>
+              <div class="event-body">
+                <div class="event-title">${escapeHtml(e.title)}</div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">${escapeHtml(e.short_description || '')}</p>
+                <div style="margin-bottom:12px;">
+                  ${(e.topics || []).slice(0,3).map(t => `<span class="badge badge-primary" style="margin-right:4px;margin-bottom:4px;">${escapeHtml(t)}</span>`).join('')}
+                </div>
+                <div class="event-meta">
+                  <span>📍 ${escapeHtml(e.venue || 'TBD')}</span>
+                  <span>👥 ${e.registered_count}/${e.capacity || '∞'}</span>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        const dList = document.getElementById('dates-list');
+        dList.innerHTML = dates.map(d => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(167,139,250,0.10);">
+            <div>
+              <div style="font-weight:600;color:var(--text);">${escapeHtml(d.name)}</div>
+            </div>
+            <span class="badge badge-accent">${String(d.day).padStart(2,'0')}/${String(d.month).padStart(2,'0')}</span>
+          </div>
+        `).join('');
+      } catch (e) {
+        toast('Failed to load dashboard: ' + e.message, 'error');
+      }
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

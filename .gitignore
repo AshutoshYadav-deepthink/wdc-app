@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Firebase credentials (NEVER commit)
+serviceAccountKey.json
+firebase-config.json
+
+# Local data store (when USE_FIREBASE=false)
+local_db.json
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+serviceAccountKey.json

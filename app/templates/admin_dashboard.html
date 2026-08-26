@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WDC — Admin Dashboard</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favicon-180.png">
+  <link rel="shortcut icon" href="/static/img/favicon.ico">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="dash-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="/" class="brand">
+        <img src="/static/img/logo-small.png" alt="WDC Logo" class="logo-img">
+        <span>WDC Admin</span>
+      </a>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="events" onclick="switchTab('events')">
+          <span class="nav-icon">📅</span> Events
+        </button>
+        <button class="nav-item" data-tab="attendance" onclick="switchTab('attendance')">
+          <span class="nav-icon">✓</span> Attendance
+        </button>
+        <button class="nav-item" data-tab="notifications" onclick="switchTab('notifications')">
+          <span class="nav-icon">🔔</span> Send Notification
+        </button>
+        <button class="nav-item" data-tab="users" onclick="switchTab('users')">
+          <span class="nav-icon">👥</span> Users &amp; Roles
+        </button>
+        <button class="nav-item" data-tab="reports" onclick="switchTab('reports')">
+          <span class="nav-icon">📊</span> Reports
+        </button>
+        <button class="nav-item" onclick="window.location.href='/'">
+          <span class="nav-icon">🏠</span> Public Dashboard
+        </button>
+      </nav>
+      <div class="sidebar-user">
+        <div class="avatar" id="user-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-role" id="user-role">Admin</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="doLogout()" title="Logout">⏻</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="dash-main">
+      <div class="dash-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+          <div>
+            <h1 id="page-title">Events</h1>
+            <p id="page-sub">Create, edit, and track WDC events.</p>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="openEventModal()">+ New Event</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-4" style="margin-bottom: 24px;">
+        <div class="stat-card">
+          <div class="stat-icon icon-purple">●</div>
+          <div>
+            <div class="stat-value" id="stat-events">—</div>
+            <div class="stat-label">Total Events</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-pink">★</div>
+          <div>
+            <div class="stat-value" id="stat-speakers">—</div>
+            <div class="stat-label">Speakers</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-yellow">♥</div>
+          <div>
+            <div class="stat-value" id="stat-students">—</div>
+            <div class="stat-label">Students</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-mint">📅</div>
+          <div>
+            <div class="stat-value" id="stat-regs">—</div>
+            <div class="stat-label">Registrations</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events tab -->
+      <div id="tab-events">
+        <div class="table-wrap">
+          <table class="table" id="events-table">
+            <thead>
+              <tr><th>Title</th><th>Date</th><th>Status</th><th>Registered</th><th>Actions</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Attendance tab -->
+      <div id="tab-attendance" style="display:none;">
+        <div class="card mb-4">
+          <div class="form-group" style="margin:0;max-width:400px;">
+            <label class="form-label">Select Event</label>
+            <select id="att-event-select" class="form-control" onchange="loadParticipants()">
+              <option value="">Choose event...</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap" id="participants-card">
+          <div class="empty-state"><div class="empty-icon">○</div><p>Select an event to load participants.</p></div>
+        </div>
+      </div>
+
+      <!-- Notifications tab -->
+      <div id="tab-notifications" style="display:none;">
+        <div class="card" style="max-width:640px;">
+          <form onsubmit="sendNotif(event)">
+            <div class="form-group">
+              <label class="form-label">Title</label>
+              <input type="text" id="n-title" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Body</label>
+              <textarea id="n-body" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Audience</label>
+              <select id="n-audience" class="form-control">
+                <option value="all">All Students</option>
+                <option value="department">By Department</option>
+                <option value="class">By Class</option>
+                <option value="event">By Event Registrants</option>
+              </select>
+            </div>
+            <div class="form-group" id="n-filter-group" style="display:none;">
+              <label class="form-label" id="n-filter-label">Filter</label>
+              <input type="text" id="n-filter" class="form-control" placeholder="e.g. BSc IT">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Channels</label>
+              <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:6px;font-weight:500;"><input type="checkbox" value="in_app" checked> In-App</label>
+                <label style="display:flex;align-items:center;gap:6px;font-weight:500;"><input type="checkbox" value="email"> Email</label>
+                <label style="display:flex;align-items:center;gap:6px;font-weight:500;"><input type="checkbox" value="push"> Push</label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">Send Notification</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Users tab -->
+      <div id="tab-users" style="display:none;">
+        <div class="table-wrap">
+          <table class="table" id="users-table">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Department</th><th>Class</th><th>Role</th><th>Change Role</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Reports tab -->
+      <div id="tab-reports" style="display:none;">
+        <div class="grid grid-4" style="margin-bottom:24px;">
+          <div class="stat-card">
+            <div class="stat-icon icon-purple">●</div>
+            <div><div class="stat-value" id="r-events">—</div><div class="stat-label">Total Events</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-mint">✓</div>
+            <div><div class="stat-value" id="r-pub">—</div><div class="stat-label">Published</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-pink">♥</div>
+            <div><div class="stat-value" id="r-students">—</div><div class="stat-label">Students</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-yellow">★</div>
+            <div><div class="stat-value" id="r-present">—</div><div class="stat-label">Total Present</div></div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table" id="reports-table">
+            <thead><tr><th>Event</th><th>Date</th><th>Status</th><th>Registered</th><th>Present</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Event Modal -->
+  <div id="event-modal" style="display:none;">
+    <div class="modal-backdrop" onclick="if(event.target===this)closeEventModal()">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="modal-title">New Event</h3>
+          <button class="btn btn-ghost btn-sm" onclick="closeEventModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="event-form" onsubmit="saveEvent(event)">
+            <input type="hidden" id="ev-id">
+            <div class="form-group">
+              <label class="form-label">Title</label>
+              <input type="text" id="ev-title" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Short Description</label>
+              <input type="text" id="ev-short" class="form-control" maxlength="120">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Full Description</label>
+              <textarea id="ev-desc" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" id="ev-date" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Venue</label>
+                <input type="text" id="ev-venue" class="form-control">
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label class="form-label">Start Time</label>
+                <input type="time" id="ev-start" class="form-control" value="10:00">
+              </div>
+              <div class="form-group">
+                <label class="form-label">End Time</label>
+                <input type="time" id="ev-end" class="form-control" value="12:00">
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group">
+                <label class="form-label">Capacity</label>
+                <input type="number" id="ev-cap" class="form-control" value="50">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Status</label>
+                <select id="ev-status" class="form-control">
+                  <option value="draft">Draft</option>
+                  <option value="published" selected>Published</option>
+                  <option value="closed">Closed</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Topics (comma-separated)</label>
+              <input type="text" id="ev-topics" class="form-control" placeholder="Health, Awareness">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg">Save Event</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script>
+    let me = null;
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.sidebar-nav .nav-item').forEach(x => x.classList.remove('active'));
+      const btn = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+      if (btn) btn.classList.add('active');
+      document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+      document.getElementById('tab-' + tab).style.display = 'block';
+      const titles = {
+        events: ['Events', 'Create, edit, and track WDC events.'],
+        attendance: ['Attendance', 'Mark attendance for event participants.'],
+        notifications: ['Send Notification', 'Broadcast messages to students.'],
+        users: ['Users & Roles', 'Manage student and staff accounts.'],
+        reports: ['Reports', 'Engagement metrics across all WDC events.'],
+      };
+      document.getElementById('page-title').textContent = titles[tab][0];
+      document.getElementById('page-sub').textContent = titles[tab][1];
+      document.getElementById('sidebar').classList.remove('open');
+      if (tab === 'users') loadUsers();
+      if (tab === 'reports') loadReports();
+      if (tab === 'attendance') loadAttEvents();
+    }
+
+    document.getElementById('n-audience').addEventListener('change', (e) => {
+      const show = e.target.value !== 'all';
+      document.getElementById('n-filter-group').style.display = show ? 'block' : 'none';
+      const labels = { department: 'Department (e.g. BSc IT)', class: 'Class (e.g. FYBSc IT)', event: 'Event ID' };
+      document.getElementById('n-filter-label').textContent = labels[e.target.value] || 'Filter';
+    });
+
+    async function init() {
+      me = await requireAdmin();
+      if (!me) return;
+      document.getElementById('user-name').textContent = me.name || me.email;
+      document.getElementById('user-role').textContent = me.role;
+      document.getElementById('user-avatar').textContent = initials(me.name);
+      await loadStats();
+      await loadEvents();
+    }
+
+    async function loadStats() {
+      try {
+        const s = await API.stats();
+        document.getElementById('stat-events').textContent = s.total_events;
+        document.getElementById('stat-speakers').textContent = s.total_speakers;
+        document.getElementById('stat-students').textContent = s.total_students;
+        document.getElementById('stat-regs').textContent = s.total_registrations;
+      } catch (e) { toast(e.message, 'error'); }
+    }
+
+    async function loadEvents() {
+      try {
+        const events = await API.adminEvents();
+        const tbody = document.querySelector('#events-table tbody');
+        if (!events.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);">No events yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = events.map(e => `
+          <tr>
+            <td><strong>${escapeHtml(e.title)}</strong></td>
+            <td>${fmtDate(e.date)}</td>
+            <td><span class="badge ${badgeForStatus(e.status)}">${e.status}</span></td>
+            <td>${e.registered_count || 0}/${e.capacity || '∞'}</td>
+            <td>
+              <button class="btn btn-soft btn-sm" onclick="editEvent('${e.id}')">Edit</button>
+              <button class="btn btn-ghost btn-sm" onclick="deleteEvent('${e.id}')" style="color:var(--danger);">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    function openEventModal() {
+      document.getElementById('event-form').reset();
+      document.getElementById('ev-id').value = '';
+      document.getElementById('modal-title').textContent = 'New Event';
+      document.getElementById('event-modal').style.display = 'block';
+    }
+
+    async function editEvent(id) {
+      try {
+        const events = await API.adminEvents();
+        const e = events.find(x => x.id === id);
+        if (!e) return;
+        document.getElementById('ev-id').value = e.id;
+        document.getElementById('ev-title').value = e.title || '';
+        document.getElementById('ev-short').value = e.short_description || '';
+        document.getElementById('ev-desc').value = e.description || '';
+        document.getElementById('ev-date').value = e.date || '';
+        document.getElementById('ev-venue').value = e.venue || '';
+        document.getElementById('ev-start').value = e.start_time || '10:00';
+        document.getElementById('ev-end').value = e.end_time || '12:00';
+        document.getElementById('ev-cap').value = e.capacity || 50;
+        document.getElementById('ev-status').value = e.status || 'published';
+        document.getElementById('ev-topics').value = (e.topics || []).join(', ');
+        document.getElementById('modal-title').textContent = 'Edit Event';
+        document.getElementById('event-modal').style.display = 'block';
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    function closeEventModal() { document.getElementById('event-modal').style.display = 'none'; }
+
+    async function saveEvent(e) {
+      e.preventDefault();
+      const id = document.getElementById('ev-id').value;
+      const payload = {
+        title: document.getElementById('ev-title').value,
+        short_description: document.getElementById('ev-short').value,
+        description: document.getElementById('ev-desc').value,
+        date: document.getElementById('ev-date').value,
+        venue: document.getElementById('ev-venue').value,
+        start_time: document.getElementById('ev-start').value,
+        end_time: document.getElementById('ev-end').value,
+        capacity: parseInt(document.getElementById('ev-cap').value) || null,
+        status: document.getElementById('ev-status').value,
+        topics: document.getElementById('ev-topics').value.split(',').map(s => s.trim()).filter(Boolean),
+      };
+      try {
+        if (id) { await API.updateEvent(id, payload); toast('Event updated', 'success'); }
+        else { await API.createEvent(payload); toast('Event created', 'success'); }
+        closeEventModal();
+        await loadEvents();
+        await loadStats();
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function deleteEvent(id) {
+      if (!confirm('Delete this event? (Will be archived if registrations exist.)')) return;
+      try { await API.deleteEvent(id); toast('Event deleted/archived', 'success'); await loadEvents(); }
+      catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function loadAttEvents() {
+      try {
+        const events = await API.adminEvents();
+        const sel = document.getElementById('att-event-select');
+        if (sel.children.length > 1) return;
+        events.forEach(e => {
+          const opt = document.createElement('option');
+          opt.value = e.id;
+          opt.textContent = `${e.title} — ${fmtDate(e.date)}`;
+          sel.appendChild(opt);
+        });
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function loadParticipants() {
+      const eid = document.getElementById('att-event-select').value;
+      const card = document.getElementById('participants-card');
+      if (!eid) {
+        card.innerHTML = '<div class="empty-state"><div class="empty-icon">○</div><p>Select an event to load participants.</p></div>';
+        return;
+      }
+      try {
+        const parts = await API.participants(eid);
+        if (!parts.length) {
+          card.innerHTML = '<div class="empty-state"><div class="empty-icon">○</div><p>No registrations for this event.</p></div>';
+          return;
+        }
+        card.innerHTML = `
+          <table class="table">
+            <thead><tr><th>Student</th><th>Department</th><th>Class</th><th>Status</th><th>Mark</th></tr></thead>
+            <tbody>
+              ${parts.map(p => `
+                <tr>
+                  <td><strong>${escapeHtml(p.name || '')}</strong><br><span style="font-size:12px;color:var(--text-muted);">${escapeHtml(p.email || '')}</span></td>
+                  <td>${escapeHtml(p.department || '—')}</td>
+                  <td>${escapeHtml(p.class_year || '—')}</td>
+                  <td id="att-status-${p.student_id}"><span class="badge badge-muted">${p.status}</span></td>
+                  <td>
+                    <select class="form-control" style="padding:6px 10px;width:auto;display:inline-block;" onchange="markAtt('${eid}','${p.student_id}',this.value)">
+                      <option value="">— Select —</option>
+                      <option value="present">Present</option>
+                      <option value="absent">Absent</option>
+                      <option value="late">Late</option>
+                    </select>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function markAtt(eid, sid, status) {
+      if (!status) return;
+      try {
+        await API.markAttendance({ event_id: eid, student_id: sid, status });
+        const cell = document.getElementById('att-status-' + sid);
+        cell.innerHTML = `<span class="badge ${badgeForStatus(status)}">${status}</span>`;
+        toast(`Marked ${status}`, 'success');
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function sendNotif(e) {
+      e.preventDefault();
+      const channels = Array.from(document.querySelectorAll('#tab-notifications input[type=checkbox]:checked')).map(c => c.value);
+      const payload = {
+        title: document.getElementById('n-title').value,
+        body: document.getElementById('n-body').value,
+        audience: document.getElementById('n-audience').value,
+        channels: channels.length ? channels : ['in_app'],
+      };
+      if (payload.audience !== 'all') payload.audience_filter = document.getElementById('n-filter').value;
+      try {
+        const r = await API.sendNotification(payload);
+        toast(`Notification sent to ${r.recipients} recipients`, 'success');
+        e.target.reset();
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function loadUsers() {
+      try {
+        const users = await API.listUsers();
+        const tbody = document.querySelector('#users-table tbody');
+        tbody.innerHTML = users.map(u => `
+          <tr>
+            <td><strong>${escapeHtml(u.name || '—')}</strong></td>
+            <td>${escapeHtml(u.email)}</td>
+            <td>${escapeHtml(u.department || '—')}</td>
+            <td>${escapeHtml(u.class_year || '—')}</td>
+            <td><span class="badge ${badgeForRole(u.role)}">${u.role}</span></td>
+            <td>
+              <select class="form-control" style="padding:6px 10px;width:auto;" onchange="changeRole('${u.id}', this.value)">
+                ${['Super Admin','Admin','Coordinator','Staff','Student'].map(r => `<option value="${r}" ${r === u.role ? 'selected' : ''}>${r}</option>`).join('')}
+              </select>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function changeRole(uid, role) {
+      try { await API.changeRole(uid, role); toast(`Role updated to ${role}`, 'success'); await loadUsers(); }
+      catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function loadReports() {
+      try {
+        const r = await API.reports();
+        document.getElementById('r-events').textContent = r.total_events;
+        document.getElementById('r-pub').textContent = r.published_events;
+        document.getElementById('r-students').textContent = r.total_students;
+        document.getElementById('r-present').textContent = r.total_attendance_present;
+        const tbody = document.querySelector('#reports-table tbody');
+        if (!r.events.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);">No events.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = r.events.map(e => `
+          <tr>
+            <td><strong>${escapeHtml(e.title)}</strong></td>
+            <td>${fmtDate(e.date)}</td>
+            <td><span class="badge ${badgeForStatus(e.status)}">${e.status}</span></td>
+            <td>${e.registered}</td>
+            <td>${e.present}</td>
+          </tr>
+        `).join('');
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function doLogout() {
+      try { await API.logout(); } catch {}
+      API.clearToken();
+      window.location.href = '/login';
+    }
+
+    function badgeForStatus(s) {
+      return {
+        draft: 'badge-muted', published: 'badge-primary', closed: 'badge-warning',
+        cancelled: 'badge-danger', completed: 'badge-success',
+        present: 'badge-success', absent: 'badge-danger', late: 'badge-warning',
+        registered: 'badge-primary', waitlisted: 'badge-warning',
+      }[s] || 'badge-muted';
+    }
+    function badgeForRole(r) {
+      return { 'Super Admin': 'badge-accent', 'Admin': 'badge-primary', 'Coordinator': 'badge-success',
+               'Staff': 'badge-warning', 'Student': 'badge-muted' }[r] || 'badge-muted';
+    }
+    function escapeHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    init();
+  </script>
+</body>
+</html>

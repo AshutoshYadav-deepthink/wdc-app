@@ -1,0 +1,20 @@
+# Render.com deployment config for WDC App
+services:
+  - type: web
+    name: wdc-app
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: USE_FIREBASE
+        value: "false"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DEFAULT_SUPER_ADMIN_EMAIL
+        value: admin@wdc.edu
+      - key: DEFAULT_SUPER_ADMIN_PASSWORD
+        value: Admin@123
+    healthCheckPath: /api/health
+    autoDeploy: true
+    
