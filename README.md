@@ -135,21 +135,7 @@ The public WDC dashboard opens first. Click "Student Login" to sign in or sign u
 
 ---
 
-## 4. Demo Credentials (auto-seeded)
-
-| Role         | Email                    | Password          |
-|--------------|--------------------------|-------------------|
-| Super Admin  | admin@wdc.edu            | Admin@123         |
-| Coordinator  | coordinator@wdc.edu      | Coordinator@123   |
-| Student      | student01@wdc.edu        | Student@123       |
-| Student      | student02@wdc.edu        | Student@123       |
-| ...          | ... up to student55      | Student@123       |
-
-> The seed also creates 8 speakers, 15 events (mix of published + completed), registrations, attendance records, and 11 women's observance dates.
-
----
-
-## 5. Switching to Real Firebase (later)
+## 4. Switching to Real Firebase (later)
 
 When you have a real Firebase project:
 
@@ -166,7 +152,7 @@ When you have a real Firebase project:
 
 ---
 
-## 6. API Endpoints
+## 5. API Endpoints
 
 Full list (see `api_spec.json` for the original spec):
 
@@ -215,7 +201,7 @@ Interactive API docs: **http://127.0.0.1:8000/docs** (Swagger UI auto-generated 
 
 ---
 
-## 7. Re-seeding the Database
+## 6. Re-seeding the Database
 
 If you want to wipe and re-seed the local DB:
 
@@ -235,7 +221,7 @@ python scripts/seed_data.py
 
 ---
 
-## 8. Tech Notes
+## 7. Tech Notes
 
 - **No certificate module, no gallery module** — per requirements. Attendance records participation instead.
 - **Browser push + email notifications** are stubbed (print to console) when SMTP / VAPID keys are not configured. Wire them up in `.env` for production.
@@ -245,7 +231,7 @@ python scripts/seed_data.py
 
 ---
 
-## 9. Troubleshooting
+## 8. Troubleshooting
 
 **Q: `ModuleNotFoundError: No module named 'fastapi'`**
 A: Activate your venv first (`venv\Scripts\activate` on Windows / `source venv/bin/activate` on macOS/Linux).
@@ -261,7 +247,7 @@ A: Make sure `serviceAccountKey.json` exists at the path in `.env`. Or set `USE_
 
 ---
 
-## 10. License & Credits
+## 9. License & Credits
 
 Built for the Women Development Cell college project.
 Spec source: `WDC_APP_FINAL_MASTER_PACKAGE.zip` (final pre-coding specification).
